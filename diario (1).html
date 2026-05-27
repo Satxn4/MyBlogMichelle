@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Blog Michelle — Diario</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=VT323&family=Nunito:wght@400;700;900&family=Pixelify+Sans&display=swap" rel="stylesheet">
+    <style>
+
+/* ═══════════════════════════════════════════════════════════
+   DIARIO — FLIPBOOK 3D
+   Arquitectura corregida:
+   • El libro tiene DOS mitades fijas: izquierda y derecha.
+   • Las HOJAS giran desde el centro hacia la izquierda.
+   • Cada .leaf tiene .leaf-front (cara derecha visible)
+     y .leaf-back (cara izquierda visible al girar).
+   • Al añadir .flipped → rotateY(-180deg) desde transform-origin: left center
+═══════════════════════════════════════════════════════════ */
+
+/* ── Escena ── */
+.diary-scene {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+}
+
+.diary-title-wrap {
+    text-align: center;
+    margin-bottom: 36px;
+}
+
+.diary-main-title {
+    font-family: 'Alex Brush', cursive;
+    font-size: clamp(55px, 9vw, 105px);
+    color: #fff;
+    font-weight: normal;
+    margin: 0;
+    line-height: 1;
+    text-shadow:
+        0 0 8px  #ff3366,
+        0 0 22px #ff0033,
+        0 0 50px #cc0000,
+        0 0 90px #65010E;
+}
+
+.diary-tagline {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: #a38c8f;
+    letter-spacing: 4px;
+    margin-top: 6px;
+}
+
+/* ── Contenedor externo: da la perspectiva ── */
+.book-scene {
+    perspective: 2500px;
+    perspective-origin: center center;
+}
+
+/* ── El libro abierto ── */
+/*
+   Estructura visual:
+   ┌──────────────────────┬──────────────────────┐
+   │   PÁGINA IZQUIERDA   │   PÁGINA DERECHA     │
+   │  (reverso de hoja    │  (frente de hoja     │
+   │   ya girada)         │   actual)            │
+   └──────────────────────┴──────────────────────┘
+
+   .book es el contenedor que guarda ambas mitades.
+   Las .leaf (hojas) son absolutas sobre la mitad DERECHA
+   y giran hacia la izquierda al recibir .flipped.
+*/
+.book {
+    position: relative;
+    width: 820px;
+    height: 520px;
+    transform-style: preserve-3d;
+}
+
+/* Mitad izquierda fija (fondo de la página izquierda) */
+.book-left {
+    position: absolute;
+    left: 0; top: 0;
+    width: 50%; height: 100%;
+    background: #FFF0F0;
+    border-radius: 8px 0 0 8px;
+    border: 1px solid #e0b0b0;
+    border-right: none;
+    box-shadow:
+        inset -10px 0 30px rgba(101,1,14,0.07),
+        -6px 0 20px rgba(0,0,0,0.3);
+    overflow: hidden;           /* ← solo en las mitades fijas, no en el libro */
+    background-image: repeating-linear-gradient(
+        transparent, transparent 29px, rgba(101,1,14,0.1) 30px
+    );
+    background-size: 100% 30px;
+    background-position: 0 40px;
+    z-index: 1;
+}
+
+/* Lo que se muestra en la página izquierda según el estado */
+.book-left-content {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    box-sizing: border-box;
+}
+
+/* Mitad derecha fija (fondo de la página derecha) */
+.book-right {
+    position: absolute;
+    right: 0; top: 0;
+    width: 50%; height: 100%;
+    background: #FFF0F0;
+    border-radius: 0 8px 8px 0;
+    border: 1px solid #e0b0b0;
+    border-left: none;
+    box-shadow:
+        inset 10px 0 30px rgba(101,1,14,0.07),
+        6px 0 20px rgba(0,0,0,0.3);
+    overflow: hidden;
+    background-image: repeating-linear-gradient(
+        transparent, transparent 29px, rgba(101,1,14,0.1) 30px
+    );
+    background-size: 100% 30px;
+    background-position: 0 40px;
+    z-index: 1;
+}
+
+.book-right-content {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    box-sizing: border-box;
+}
+
+/* Lomo central */
+.book-spine {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 100%;
+    background: linear-gradient(180deg,
+        #4a0008 0%, #1a0003 25%,
+        #65010E 50%, #1a0003 75%, #4a0008 100%
+    );
+    z-index: 900;
+    box-shadow: -4px 0 12px rgba(0,0,0,0.5), 4px 0 12px rgba(0,0,0,0.5);
+    border-radius: 2px;
+}
+
+/* ── Las hojas que giran ── */
+/*
+   Cada .leaf se posiciona en la mitad DERECHA del libro.
+   transform-origin: left center  → gira desde el lomo.
+   Al recibir .flipped → rotateY(-180deg) → pasa a la izquierda.
+*/
+.leaf {
+    position: absolute;
+    top: 0;
+    left: 50%;               /* empieza en el centro (lomo) */
+    width: 50%;              /* ocupa la mitad derecha */
+    height: 100%;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    transition: transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1.000);
+    /* z-index se gestiona por JS */
+}
+
+.leaf.flipped {
+    transform: rotateY(-180deg);
+}
+
+/* Cara delantera: visible en la mitad derecha antes de girar */
+.leaf-front {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+    border-radius: 0 8px 8px 0;
+    border: 1px solid #e0b0b0;
+    border-left: none;
+}
+
+/* Cara trasera: visible en la mitad izquierda después de girar */
+.leaf-back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: rotateY(180deg);
+    overflow: hidden;
+    border-radius: 8px 0 0 8px;
+    border: 1px solid #e0b0b0;
+    border-right: none;
+}
+
+/* ── Portada ── */
+.cover-face {
+    background:
+        radial-gradient(ellipse at 35% 35%, #5a000c 0%, #1a0003 65%),
+        linear-gradient(135deg, #3D0109, #140103);
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    box-sizing: border-box;
+    padding: 30px;
+}
+
+.cover-face::before {
+    content: '';
+    position: absolute;
+    inset: 14px;
+    border: 1px solid rgba(255,194,194,0.18);
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.cover-title {
+    font-family: 'Alex Brush', cursive;
+    font-size: 48px;
+    color: #fff;
+    text-align: center;
+    line-height: 1.25;
+    text-shadow: 0 0 6px #ff3366, 0 0 20px #ff0033, 0 0 45px #cc0000;
+}
+
+.cover-sub {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: #ffc2c2;
+    letter-spacing: 3px;
+    text-align: center;
+}
+
+.cover-line {
+    width: 55%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,194,194,0.4), transparent);
+}
+
+.cover-deco {
+    font-size: 32px;
+    opacity: 0.8;
+}
+
+/* ── Papel de páginas interiores ── */
+.paper-face {
+    background: #FFF0F0;
+    background-image: repeating-linear-gradient(
+        transparent, transparent 29px, rgba(101,1,14,0.1) 30px
+    );
+    background-size: 100% 30px;
+    background-position: 0 40px;
+    width: 100%; height: 100%;
+    box-sizing: border-box;
+}
+
+/* Cara derecha (front): contenido de página derecha */
+.paper-face.right {
+    display: flex;
+    flex-direction: column;
+    padding: 35px 28px 20px 22px;
+    gap: 10px;
+}
+
+/* Cara izquierda (back): polaroid centrado */
+.paper-face.left {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 25px 18px;
+}
+
+/* ── Polaroid ── */
+.polaroid {
+    background: #fff;
+    padding: 10px 10px 34px;
+    box-shadow: 4px 4px 0 #ddd, 8px 8px 0 #ccc, 0 18px 35px rgba(0,0,0,0.22);
+    transform: rotate(-2.5deg);
+    display: inline-block;
+}
+
+.polaroid img {
+    width: 180px;
+    height: 155px;
+    object-fit: cover;
+    display: block;
+    border: 1px solid #eee;
+}
+
+.polaroid-caption {
+    font-family: 'Alex Brush', cursive;
+    font-size: 20px;
+    color: #555;
+    text-align: center;
+    margin-top: 6px;
+    line-height: 1.3;
+}
+
+/* ── Texto de página ── */
+.page-date {
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    color: #65010E;
+    letter-spacing: 2px;
+    border-bottom: 1px solid rgba(101,1,14,0.18);
+    padding-bottom: 6px;
+    flex-shrink: 0;
+}
+
+.page-msg {
+    font-family: 'Alex Brush', cursive;
+    font-size: 26px;
+    color: #3a1218;
+    line-height: 1.7;
+    flex: 1;
+}
+
+.page-num {
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    color: rgba(101,1,14,0.3);
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* ── Página izquierda inicial (contraportada / portada interior) ── */
+.left-cover-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+}
+
+.left-cover-text {
+    font-family: 'Alex Brush', cursive;
+    font-size: 28px;
+    color: rgba(101,1,14,0.25);
+    text-align: center;
+    line-height: 1.6;
+}
+
+/* ── Controles ── */
+.book-controls {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin-top: 34px;
+}
+
+.flip-btn {
+    background: #280106;
+    color: #fff;
+    border: 2px solid #ffc2c2;
+    border-radius: 40px;
+    padding: 12px 34px;
+    font-family: 'VT323', monospace;
+    font-size: 24px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+.flip-btn:hover:not(:disabled) {
+    background: #65010E;
+    box-shadow: 0 0 22px rgba(255,0,51,0.45);
+    transform: translateY(-2px);
+}
+
+.flip-btn:disabled {
+    opacity: 0.28;
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+}
+
+.page-indicator {
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    color: #a38c8f;
+    letter-spacing: 2px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.kb-hint {
+    margin-top: 14px;
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    color: rgba(163,140,143,0.4);
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .book { width: 96vw; height: calc(96vw * 0.63); }
+    .polaroid img { width: 120px; height: 105px; }
+    .cover-title { font-size: 32px; }
+    .page-msg { font-size: 20px; }
+    .flip-btn { padding: 10px 22px; font-size: 20px; }
+}
+
+@media (max-width: 540px) {
+    .book { height: calc(96vw * 0.75); }
+    .cover-title { font-size: 24px; }
+    .page-msg { font-size: 16px; }
+    .page-date { font-size: 16px; }
+    .paper-face.right { padding: 22px 14px 14px 16px; }
+}
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+    <div class="header-banner-container">
+        <img src="FOTOS/Portada 1.png" class="banner-img" alt="Portada Michelle">
+        <div class="header-text-overlay">
+            <p class="welcome-text">✦ Bienvenidxs ✦</p>
+            <h1 class="sparkle-name">Michelle</h1>
+            <p class="tagline">✦ MI PEQUEÑO ESPACIO EN LA WEB ✦</p>
+        </div>
+        <nav class="nav-buttons">
+            <a href="index.html">INDEX</a>
+            <a href="gustos.html">MIS GUSTOS</a>
+            <a href="galeria.html">GALERÍA</a>
+            <a href="diario.html">DIARIO</a>
+        </nav>
+    </div>
+</header>
+
+<!-- MARQUEE -->
+<div class="marquee-container">
+    <div class="marquee-track">
+        <video src="FOTOS/GIF/1.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/2.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/3.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/4.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/5.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/6.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/1.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/2.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/3.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/4.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/5.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/6.mp4.mp4" autoplay loop muted playsinline></video>
+    </div>
+</div>
+
+<!-- SECCIÓN DIARIO -->
+<section class="diary-scene">
+
+    <div class="diary-title-wrap">
+        <h2 class="diary-main-title">Diario de Tikitita</h2>
+        <p class="diary-tagline">✦ NUESTRAS MEMORIAS EN PAPEL ✦</p>
+    </div>
+
+    <!-- La perspectiva vive AQUÍ, fuera del libro -->
+    <div class="book-scene">
+        <div class="book" id="book">
+
+            <!-- Fondo fijo izquierdo (siempre visible) -->
+            <div class="book-left">
+                <div class="book-left-content" id="leftContent">
+                    <!-- JS lo rellena según la página actual -->
+                    <div class="left-cover-content">
+                        <div class="left-cover-text">
+                            Este cuaderno<br>le pertenece al<br>amor de mi vida.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fondo fijo derecho (siempre visible) -->
+            <div class="book-right">
+                <div class="book-right-content" id="rightContent">
+                    <!-- JS lo rellena según la página actual -->
+                    <div class="cover-face">
+                        <div class="cover-deco">♡</div>
+                        <div class="cover-line"></div>
+                        <div class="cover-title">Diario de<br>Tikitita</div>
+                        <div class="cover-line"></div>
+                        <div class="cover-sub">M &amp; A · 2026 — ∞</div>
+                        <div class="cover-deco">✦</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lomo -->
+            <div class="book-spine"></div>
+
+            <!--
+            ╔══════════════════════════════════════════════════════════╗
+            ║  HOJAS QUE GIRAN  (.leaf)                               ║
+            ║                                                          ║
+            ║  Cada .leaf representa UNA hoja física del libro.       ║
+            ║  • .leaf-front  →  cara que se ve a la DERECHA          ║
+            ║                    antes de girar la hoja.              ║
+            ║  • .leaf-back   →  cara que se ve a la IZQUIERDA        ║
+            ║                    después de girar la hoja.            ║
+            ║                                                          ║
+            ║  Al pasar la página N, la hoja N gira (-180deg)         ║
+            ║  y su .leaf-back queda visible en la mitad izquierda.   ║
+            ╚══════════════════════════════════════════════════════════╝
+
+            PARA AÑADIR MÁS PÁGINAS:
+            1. Copia un bloque <div class="leaf"> completo.
+            2. Pégalo justo antes del cierre </div><!--/book-->.
+            3. Actualiza la foto en .leaf-back (la polaroid).
+            4. Actualiza el texto en .leaf-front.
+            5. El JS cuenta las hojas automáticamente.
+            -->
+
+            <!-- HOJA 1 -->
+            <div class="leaf" id="leaf-0">
+                <!-- Cara derecha antes de girar: texto pág 1 -->
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">21 de Marzo, 2026</div>
+                        <p class="page-msg">
+                            Hoy te pedí que fueras mía para siempre.
+                            Hubo nervios, risas y ese olor tuyo que
+                            me pone el corazón al revés.
+                            Dijiste que sí antes de que yo terminara
+                            la pregunta — o eso me pareció, porque
+                            tenía los ojos llenos de ti.
+                        </p>
+                        <div class="page-num">pág. 1</div>
+                    </div>
+                </div>
+                <!-- Cara izquierda después de girar: polaroid pág 1 -->
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/US/11.jfif" alt="Formalización">
+                            <div class="polaroid-caption">Formalización<br>21·03·2026</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /HOJA 1 -->
+
+            <!-- HOJA 2 -->
+            <div class="leaf" id="leaf-1">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">Un día de verano</div>
+                        <p class="page-msg">
+                            La playa siempre fue tu lugar favorito.
+                            Te vi correr hacia el agua antes de que
+                            yo me sacara las zapatillas.
+                            En ese momento supe que quería seguirte
+                            a todos los mares del mundo.
+                        </p>
+                        <div class="page-num">pág. 2</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/US/9.jfif" alt="Foto playa">
+                            <div class="polaroid-caption">Foto playa</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /HOJA 2 -->
+
+            <!-- HOJA 3 -->
+            <div class="leaf" id="leaf-2">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">La primera noche</div>
+                        <p class="page-msg">
+                            Dormiste con la cabeza en mi hombro.
+                            Yo no me moví en toda la noche
+                            para no despertarte.
+                            Me dolió el brazo cuatro días.
+                            Valió cada segundo.
+                        </p>
+                        <div class="page-num">pág. 3</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/US/23.jfif" alt="Primera noche juntas">
+                            <div class="polaroid-caption">Primera noche<br>juntas</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /HOJA 3 -->
+
+            <!-- HOJA 4 -->
+            <div class="leaf" id="leaf-3">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">Cualquier martes</div>
+                        <p class="page-msg">
+                            Los besitos en el cachete que me das
+                            sin motivo son los que más guardo.
+                            No necesitan ocasión especial
+                            para hacerme el mejor día de mi vida.
+                        </p>
+                        <div class="page-num">pág. 4</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/US/2.jfif" alt="Besito en el cachete">
+                            <div class="polaroid-caption">besito en el<br>cachete ♡</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /HOJA 4 -->
+
+            <!-- HOJA 5 -->
+            <div class="leaf" id="leaf-4">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">Viernes de fritura</div>
+                        <p class="page-msg">
+                            Juramos que solo íbamos a comer rápido.
+                            Terminamos hablando hasta que cerró el local.
+                            Contigo no existe el "solo un ratito".
+                        </p>
+                        <div class="page-num">pág. 5</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/US/17.jfif" alt="Noche de frifrayers">
+                            <div class="polaroid-caption">Noche de<br>frifrayers</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /HOJA 5 -->
+
+            <!-- HOJA 6 -->
+            <div class="leaf" id="leaf-5">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">El segundo encuentro</div>
+                        <p class="page-msg">
+                            La primera vez tuve miedo de que fuera
+                            casualidad. La segunda supe que no.
+                            Llegaste y ya sentí que habías llegado
+                            para quedarte.
+                        </p>
+                        <div class="page-num">pág. 6</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/US/24.jfif" alt="2do encuentro">
+                            <div class="polaroid-caption">2do encuentro ♡</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /HOJA 6 -->
+
+            <!-- HOJA 7 -->
+            <div class="leaf" id="leaf-6">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">Meiggs, un día cualquiera</div>
+                        <p class="page-msg">
+                            "Vamo a Meiggs miamor" dijiste.
+                            Fuimos y volvimos sin comprar nada,
+                            pero con horas de risa encima.
+                            Ese es nuestro superpoder.
+                        </p>
+                        <div class="page-num">pág. 7</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/US/16.jfif" alt="Vamo a meiggs">
+                            <div class="polaroid-caption">Vamo a meiggs<br>miamor ♡</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /HOJA 7 -->
+
+            <!-- HOJA 8 -->
+            <div class="leaf" id="leaf-7">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">Divas por siempre</div>
+                        <p class="page-msg">
+                            Salimos y las dos sabíamos que
+                            éramos las más lindas del lugar.
+                            No lo dijimos. No fue necesario.
+                            Las miradas ya lo decían todo.
+                        </p>
+                        <div class="page-num">pág. 8</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/US/21.jfif" alt="Divas">
+                            <div class="polaroid-caption">Divas 👑</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /HOJA 8 -->
+
+        </div><!-- /#book -->
+    </div><!-- /.book-scene -->
+
+    <!-- CONTROLES -->
+    <div class="book-controls">
+        <button class="flip-btn" id="prevBtn" disabled>◀ ANTERIOR</button>
+        <span class="page-indicator" id="indicator">Portada</span>
+        <button class="flip-btn" id="nextBtn">SIGUIENTE ▶</button>
+    </div>
+    <p class="kb-hint">← → navegar con teclado</p>
+
+</section>
+
+<script>
+/* ============================================================
+   FLIPBOOK ENGINE — arquitectura de hojas que giran
+   desde el centro hacia la izquierda.
+
+   Estado: currentLeaf = índice de la última hoja girada.
+   -1  → ninguna hoja girada (portada visible)
+    0  → hoja 0 girada (página 1 visible a la izquierda,
+          cara front de hoja 1 visible a la derecha)
+   N-1 → todas las hojas giradas (fin del libro)
+============================================================ */
+
+const leaves    = Array.from(document.querySelectorAll('.leaf'));
+const prevBtn   = document.getElementById('prevBtn');
+const nextBtn   = document.getElementById('nextBtn');
+const indicator = document.getElementById('indicator');
+const N         = leaves.length;
+
+let current = -1;   /* -1 = portada */
+
+/* ---- Datos de cada spread (par de páginas abiertas) ----
+   spread[i] describe qué se ve cuando current === i - 1
+   (es decir, después de girar i hojas).
+
+   LEFT  → contenido de la mitad izquierda
+   RIGHT → contenido de la mitad derecha
+
+   spread[-1] = portada: left = guardia, right = portada
+   spread[0]  = hoja 0 girada: left = back hoja 0, right = front hoja 1
+   spread[N-1]= todas giradas: left = back hoja N-1, right = contraportada
+*/
+
+/* Contenido de la página izquierda estática cuando no hay hoja girada */
+const LEFT_COVER_HTML = `
+    <div class="left-cover-content">
+        <div class="left-cover-text">
+            Este cuaderno<br>le pertenece al<br>amor de mi vida.
+        </div>
+    </div>`;
+
+/* Portada (lado derecho inicial) */
+const RIGHT_COVER_HTML = `
+    <div class="cover-face">
+        <div class="cover-deco">♡</div>
+        <div class="cover-line"></div>
+        <div class="cover-title">Diario de<br>Tikitita</div>
+        <div class="cover-line"></div>
+        <div class="cover-sub">M &amp; A · 2026 — ∞</div>
+        <div class="cover-deco">✦</div>
+    </div>`;
+
+/* Contraportada (lado derecho al final) */
+const RIGHT_END_HTML = `
+    <div style="display:flex;align-items:center;justify-content:center;height:100%;padding:30px;box-sizing:border-box;">
+        <div style="font-family:'Alex Brush',cursive;font-size:32px;color:rgba(101,1,14,0.22);text-align:center;line-height:1.7;">
+            Fin de este capítulo.<br>El siguiente está<br>por escribirse. ♡
+        </div>
+    </div>`;
+
+/* ---- Renderizar las mitades fijas según el estado ---- */
+function render() {
+    const leftEl  = document.getElementById('leftContent');
+    const rightEl = document.getElementById('rightContent');
+
+    if (current === -1) {
+        /* Portada: nada girado */
+        leftEl.innerHTML  = LEFT_COVER_HTML;
+        rightEl.innerHTML = RIGHT_COVER_HTML;
+    } else if (current === N - 1) {
+        /* Fin: todas giradas */
+        /* La izquierda muestra el back de la última hoja (ya está en el DOM girado) */
+        /* La derecha muestra contraportada */
+        leftEl.innerHTML  = '';   /* el back de la hoja ya es visible por CSS */
+        rightEl.innerHTML = RIGHT_END_HTML;
+    } else {
+        /* Páginas intermedias: izq y der muestran fondos vacíos
+           porque el contenido real está en .leaf-back y .leaf-front */
+        leftEl.innerHTML  = '';
+        rightEl.innerHTML = '';
+    }
+
+    /* Indicador */
+    if (current === -1)       indicator.textContent = 'Portada';
+    else if (current === N-1) indicator.textContent = 'Fin ♡';
+    else                      indicator.textContent = `Pág. ${current + 1} · ${current + 2}`;
+
+    prevBtn.disabled = (current === -1);
+    nextBtn.disabled = (current === N - 1);
+}
+
+/* ---- Gestión de z-index ----
+   La hoja que está girando debe estar por encima de todas.
+   Las ya giradas van hacia abajo; las pendientes van hacia arriba
+   desde la más cercana a la más lejana.
+*/
+function updateZ() {
+    leaves.forEach((leaf, i) => {
+        if (i <= current) {
+            /* ya girada: z-index bajo, apiladas de más vieja a más nueva */
+            leaf.style.zIndex = i + 1;
+        } else {
+            /* pendiente de girar: la más cercana al tope */
+            leaf.style.zIndex = N - i + 10;
+        }
+    });
+}
+
+/* ---- Avanzar ---- */
+function flipNext() {
+    if (current >= N - 1) return;
+    current++;
+    /* Elevar la hoja que va a girar antes del giro */
+    leaves[current].style.zIndex = N + 100;
+    /* Forzar reflow para que la elevación sea visible antes de la transición */
+    void leaves[current].offsetWidth;
+    leaves[current].classList.add('flipped');
+    /* Al terminar la transición, redistribuir z-index */
+    leaves[current].addEventListener('transitionend', () => {
+        updateZ();
+        render();
+    }, { once: true });
+    render();
+}
+
+/* ---- Retroceder ---- */
+function flipPrev() {
+    if (current < 0) return;
+    const leaf = leaves[current];
+    /* Elevar la hoja que va a desgirar */
+    leaf.style.zIndex = N + 100;
+    void leaf.offsetWidth;
+    leaf.classList.remove('flipped');
+    leaf.addEventListener('transitionend', () => {
+        updateZ();
+        render();
+    }, { once: true });
+    current--;
+    render();
+}
+
+/* ---- Eventos ---- */
+nextBtn.addEventListener('click', flipNext);
+prevBtn.addEventListener('click', flipPrev);
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') flipNext();
+    if (e.key === 'ArrowLeft')  flipPrev();
+});
+
+/* ---- Swipe en móvil ---- */
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) {
+        if (dx < 0) flipNext();
+        else        flipPrev();
+    }
+});
+
+/* ---- Inicializar ---- */
+updateZ();
+render();
+</script>
+
+<script src="script.js"></script>
+</body>
+</html>

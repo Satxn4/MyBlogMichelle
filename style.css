@@ -1,0 +1,519 @@
+/* =========================================
+   1. RESET Y VARIABLES DE TU PALETA
+   ========================================= */
+:root {
+    --bg-darkest: #140103;
+    --bg-windows: #280106;   /* Fondo exterior de la ventana */
+    --window-top: #3D0109;
+    --inner-box:  #1d0104;   /* Fondo interior oscuro estilo Vivirin */
+    --accents: #50010C;
+    --highlights: #65010E;
+    --text-light: #ffffff;
+    --text-pink: #ffc2c2;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-darkest);
+    background-image: 
+        linear-gradient(rgba(101, 1, 14, 0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(101, 1, 14, 0.2) 1px, transparent 1px);
+    background-size: 30px 30px;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text-light);
+    overflow-x: hidden;
+}
+
+/* =========================================
+   2. CABECERA Y BANNER
+   ========================================= */
+.site-header {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+    border-bottom: 4px solid var(--text-light);
+}
+
+.header-banner-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-color: var(--bg-darkest);
+}
+
+.banner-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    max-height: 550px;
+    filter: brightness(0.85); 
+}
+
+.header-text-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%);
+    text-align: center;
+    z-index: 5;
+    width: 100%;
+    padding: 0 15px;
+}
+
+.welcome-text {
+    letter-spacing: 6px;
+    font-size: 14px;
+    text-transform: uppercase;
+    margin-bottom: -15px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+.sparkle-name {
+    font-family: 'Alex Brush', cursive;
+    font-size: clamp(50px, 10vw, 150px); /* Ajustado para mejor responsividad */
+    color: var(--text-light);
+    font-weight: normal;
+    line-height: 1.2;
+    margin: 0;
+    text-shadow: 
+        0 0 10px #ff3366, 
+        0 0 20px #ff0033, 
+        0 0 40px #cc0000, 
+        0 0 80px var(--highlights);
+}
+
+.tagline {
+    letter-spacing: 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 6px 25px;
+    border-radius: 30px;
+    display: inline-block;
+    background: rgba(40, 1, 6, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.nav-buttons {
+    position: absolute;
+    bottom: 30px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    z-index: 10;
+    padding: 0 15px;
+}
+
+.nav-buttons a {
+    background-color: rgba(20, 1, 3, 0.85);
+    color: var(--text-light);
+    text-decoration: none;
+    padding: 8px 30px;
+    border-radius: 30px;
+    border: 2px solid var(--text-light);
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+}
+
+.nav-buttons a:hover {
+    background-color: var(--highlights);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px #ff0033;
+}
+
+/* =========================================
+   3. MARQUEE DE VIDEOS
+   ========================================= */
+.marquee-container {
+    width: 100%;
+    overflow: hidden;
+    background-color: var(--window-top);
+    border-top: 2px dashed var(--text-light);
+    border-bottom: 2px dashed var(--text-light);
+    padding: 10px 0;
+    margin-bottom: 30px;
+}
+
+.marquee-track {
+    display: flex;
+    width: max-content;
+    animation: scroll 20s linear infinite;
+    gap: 15px;
+}
+
+.marquee-track video {
+    height: 80px;
+    border: 2px solid var(--text-light);
+    border-radius: 5px;
+}
+
+@keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* =========================================
+   4. LAYOUT PRINCIPAL (INDEX Y GUSTOS)
+   ========================================= */
+.main-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(400px, 2fr) minmax(280px, 1fr);
+    gap: 30px;
+    max-width: 1650px;
+    margin: 0 auto;
+    padding: 0 20px 50px 20px;
+}
+
+.main-layout-gustos {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 25px auto;
+    padding: 0 20px;
+}
+
+.window-row-two {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.flex-large { flex: 1.4; min-width: 300px; }
+.flex-small { flex: 1; min-width: 280px; }
+
+/* =========================================
+   5. VENTANAS RETRO VIVIRIN
+   ========================================= */
+.retro-window {
+    background-color: var(--bg-windows);
+    border-radius: 15px;
+    border: 3px solid var(--text-light);
+    padding: 12px;
+    position: relative; 
+    box-shadow: 0px 8px 15px rgba(0,0,0,0.5);
+}
+
+.window-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5px 10px 5px;
+}
+
+.window-title, .crafts-title, .safe-title, .hypo-title, .car-name {
+    font-family: 'VT323', monospace;
+    font-size: 24px;
+    color: var(--text-light);
+    letter-spacing: 1px;
+}
+
+.crafts-title, .safe-title, .car-name { color: #ff8da1; }
+.hypo-title { color: #ff4d6d; margin-bottom: 2px; display: block; }
+.car-name { display: block; margin-top: 4px; }
+
+.dots { display: flex; gap: 6px; }
+.dots span { 
+    width: 12px; height: 12px; 
+    border: 2px solid var(--text-light); 
+    border-radius: 50%; 
+}
+
+.inner-box {
+    background-color: var(--inner-box);
+    border-radius: 10px;
+    padding: 20px 20px 30px 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* =========================================
+   6. TIPOGRAFÍA INTERNA Y UTILIDADES
+   ========================================= */
+.mt-20 { margin-top: 20px; }
+.space-bottom { margin-bottom: 30px; }
+.text-center { text-align: center; }
+.text-justify { text-align: justify; }
+
+.inner-box p, 
+.inner-box li, 
+.inner-box span,
+.inner-box div {
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+.inner-box h2 {
+    font-family: 'VT323', monospace;
+    font-size: 34px;
+    color: var(--text-pink);
+    margin-bottom: 15px;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.inner-box h3, .inner-box h4 {
+    font-family: 'VT323', monospace;
+    font-size: 26px;
+    margin-bottom: 12px;
+}
+
+.profile-text {
+    font-size: 14px; /* Opciones específicas se mantienen si lo requieres */
+    line-height: 1.6;
+    text-align: left;
+}
+
+.car-sub, .michi-caption {
+    font-size: 15px;
+    color: #888;
+}
+
+/* =========================================
+   7. COMPONENTES INTERNOS (Perfil, Gustos)
+   ========================================= */
+.profile-body { background-color: var(--accents); }
+
+.profile-icon {
+    width: 130px;
+    height: 130px;
+    background-color: var(--bg-darkest);
+    border-radius: 50%;
+    border: 3px solid var(--text-light);
+    object-fit: cover;
+    margin: 0 auto 15px auto;
+    display: block;
+}
+
+/* Elementos Flotantes */
+.floating-character {
+    position: absolute;
+    z-index: 10;
+    pointer-events: none;
+}
+.left-float { width: 200px; bottom: -50px; right: -70px; }
+.profile-corner-oni { width: 170px; position: absolute; bottom: 10px; right: 10px; z-index: 10; pointer-events: none; }
+.mood-float { width: 240px; bottom: -25px; left: -40px; }
+.oni-flotante { float: right; width: 150px; margin: 5px 0 5px 15px; }
+
+.mood-bipolar-image {
+    display: block;
+    margin: 25px auto 0;
+    width: 200px;
+    height: auto;
+}
+
+/* Galerías e Identidad */
+.singers-gallery {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.singers-gallery img {
+    width: calc(50% - 10px);
+    border-radius: 10px;
+    border: 2px solid var(--highlights);
+    object-fit: cover;
+}
+
+.identity-flex { display: flex; gap: 30px; flex-wrap: wrap; align-items: center; }
+.identity-michi-gif { flex: 0 0 180px; text-align: center; margin: 0 auto; }
+.identity-michi-gif img { width: 100%; border-radius: 8px; border: 2px solid #65010E; background: #0a0001; }
+.identity-text { flex: 1; min-width: 250px; }
+.identity-highlights { color: #ff8da1; font-family: 'VT323', monospace; margin: 0; }
+
+.hobb-flex-row { display: flex; gap: 15px; align-items: center; }
+.hobb-avatar { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #65010E; }
+.hobb-crafts { background: rgba(101, 1, 14, 0.15); padding: 12px; border-radius: 6px; border: 1px dashed #65010E; margin-top: 15px; }
+
+.garage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; text-align: center; }
+.car-card img { width: 100%; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #65010E; }
+
+.media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; }
+.media-highlight-box { background: rgba(101, 1, 14, 0.2); padding: 15px; border-radius: 6px; border: 1px solid #3D0109; text-align: center; }
+
+.hypo-alert { background: rgba(255, 77, 109, 0.1); padding: 10px; border-radius: 4px; border-left: 3px solid #ff4d6d; margin-top: 10px; }
+.hypo-alert p { color: #b3a1a3; }
+
+.protocol-card { background: rgba(101, 1, 14, 0.3); padding: 15px; border-radius: 6px; border: 1px solid #65010E; display: flex; gap: 12px; align-items: center; margin-top: 15px; }
+.protocol-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #ff8da1; flex-shrink: 0; }
+.protocol-text h4 { color: #ff8da1; margin: 0; }
+
+/* =========================================
+   8. TÍTULO MYA Y POLAROIDS
+   ========================================= */
+.mya-custom-title-container {
+    text-align: center;
+    margin: 60px 0 30px 0;
+    padding: 0 20px;
+}
+
+.mya-main-title {
+    font-family: 'Pixelify Sans', 'VT323', monospace;
+    font-size: clamp(35px, 6vw, 55px);
+    color: var(--text-light);
+    text-shadow: 0 0 10px #ff4d6d, 0 0 20px #ff4d6d;
+    margin: 0;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+.mya-main-title span {
+    color: #ff8da1;
+    animation: pulse 1.5s infinite alternate;
+    display: inline-block;
+}
+
+.mya-subtitle {
+    font-family: 'VT323', monospace;
+    color: #a6a6a6;
+    font-size: 22px;
+    margin-top: 10px;
+    letter-spacing: 2px;
+}
+
+@keyframes pulse {
+    from { transform: scale(1); text-shadow: 0 0 10px #ff4d6d; }
+    to { transform: scale(1.2); text-shadow: 0 0 20px #ffcc5c; }
+}
+
+.scattered-gallery-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* Mejor centrado general */
+    align-items: center;
+    gap: 50px;
+    padding: 60px 20px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto 80px auto;
+}
+
+.polaroid-item {
+    position: relative;
+    --rot: 0deg; 
+    --moveY: 0px;
+    --moveX: 0px;
+    transform: rotate(var(--rot)) translate(var(--moveX), var(--moveY));
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), z-index 0.1s;
+    z-index: 1;
+}
+
+.polaroid-item:hover {
+    z-index: 99;
+    transform: rotate(0deg) translate(0px, 0px) scale(1.15); /* Escala ligeramente reducida para evitar desbordes */
+}
+
+/* Rotaciones Caóticas */
+.polaroid-item:nth-child(2n) { --rot: 6deg;   --moveY: 25px;  --moveX: -15px; }
+.polaroid-item:nth-child(3n) { --rot: -8deg;  --moveY: -35px; --moveX: 20px; }
+.polaroid-item:nth-child(4n) { --rot: 5deg;   --moveY: 15px;  --moveX: 30px; }
+.polaroid-item:nth-child(5n) { --rot: -6deg;  --moveY: -20px; --moveX: -25px; }
+.polaroid-item:nth-child(7n) { --rot: 9deg;   --moveY: 45px;  --moveX: 10px; }
+.polaroid-item:nth-child(11n){ --rot: -10deg; --moveY: -40px; --moveX: 35px; }
+
+.pin {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    box-shadow: inset -3px -3px 5px rgba(0,0,0,0.3), 2px 2px 4px rgba(0,0,0,0.4);
+    background: #ff4d6d;
+}
+.polaroid-item:nth-child(2n) .pin { background: #9cadce; }
+.polaroid-item:nth-child(3n) .pin { background: #ffcc5c; }
+.polaroid-item:nth-child(4n) .pin { background: #a3c1ad; }
+.polaroid-item:nth-child(5n) .pin { background: #f9d5e5; }
+
+.polaroid-card {
+    background: #fdfdfd;
+    padding: 12px 12px 0 12px;
+    border: 1px solid #ddd;
+    box-shadow: 4px 6px 20px rgba(0,0,0,0.6);
+    width: 220px;
+}
+
+.polaroid-card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border: 1px solid #eee;
+}
+
+.polaroid-footer {
+    padding: 12px 0;
+    text-align: center;
+    font-family: 'Alex Brush', cursive;
+    font-size: 26px;
+    color: #333;
+}
+
+/* =========================================
+   9. MEDIA QUERIES UNIFICADAS (RESPONSIVO)
+   ========================================= */
+@media screen and (max-width: 950px) {
+    /* Convierte los layouts en una sola columna fluida */
+    .main-layout {
+        grid-template-columns: 1fr;
+        padding: 0 15px 30px 15px;
+    }
+    
+    .nav-buttons {
+        position: relative;
+        bottom: 0;
+        padding: 20px 15px;
+        background-color: var(--bg-windows);
+    }
+
+    /* Galería de Cantantes */
+    .singers-gallery {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .singers-gallery img {
+        width: 100%;
+        max-width: 350px;
+    }
+
+    /* Ajuste de elementos flotantes para no tapar contenido */
+    .left-float, .mood-float {
+        display: none; /* En pantallas pequeñas, ocultar flotantes externos suele ser lo mejor */
+    }
+    
+    .oni-flotante {
+        width: 100px; /* Reducir en móvil */
+    }
+    
+    /* Layout Gustos */
+    .window-row-two {
+        flex-direction: column;
+    }
+    
+    .identity-flex {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+

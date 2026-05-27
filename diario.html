@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Blog Michelle — Diario</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=VT323&family=Nunito:wght@400;700;900&family=Pixelify+Sans&display=swap" rel="stylesheet">
+    <style>
+
+/* ═══════════════════════════════════════════════════════════
+   DIARIO — FLIPBOOK 3D
+═══════════════════════════════════════════════════════════ */
+
+/* ── Escena ── */
+.diary-scene {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+}
+
+.diary-title-wrap {
+    text-align: center;
+    margin-bottom: 36px;
+}
+
+.diary-main-title {
+    font-family: 'Alex Brush', cursive;
+    font-size: clamp(55px, 9vw, 105px);
+    color: #fff;
+    font-weight: normal;
+    margin: 0;
+    line-height: 1;
+    text-shadow:
+        0 0 8px  #ff3366,
+        0 0 22px #ff0033,
+        0 0 50px #cc0000,
+        0 0 90px #65010E;
+}
+
+.diary-tagline {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: #a38c8f;
+    letter-spacing: 4px;
+    margin-top: 6px;
+}
+
+/* ── Contenedor externo: da la perspectiva ── */
+.book-scene {
+    perspective: 2500px;
+    perspective-origin: center center;
+}
+
+/* ── El libro abierto ── */
+.book {
+    position: relative;
+    width: 820px;
+    height: 520px;
+    transform-style: preserve-3d;
+    /* Transición suave para cuando se abre o cierra */
+    transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+/* ── MODIFICADOR: LIBRO CERRADO ── */
+/* Desplaza el libro para centrar la mitad derecha (portada/contraportada) */
+.book.closed {
+    transform: translateX(-25%);
+}
+/* Oculta la parte izquierda y las hojas interiores cuando está cerrado */
+.book.closed .book-left,
+.book.closed .leaf {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+/* Mitad izquierda fija (fondo de la página izquierda) */
+.book-left {
+    position: absolute;
+    left: 0; top: 0;
+    width: 50%; height: 100%;
+    background: #FFF0F0;
+    border-radius: 8px 0 0 8px;
+    border: 1px solid #e0b0b0;
+    border-right: none;
+    box-shadow:
+        inset -10px 0 30px rgba(101,1,14,0.07),
+        -6px 0 20px rgba(0,0,0,0.3);
+    overflow: hidden;
+    background-image: repeating-linear-gradient(
+        transparent, transparent 29px, rgba(101,1,14,0.1) 30px
+    );
+    background-size: 100% 30px;
+    background-position: 0 40px;
+    z-index: 1;
+    /* Transición para aparecer suavemente al abrir el libro */
+    transition: opacity 0.6s ease 0.1s;
+}
+
+.book-left-content {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    box-sizing: border-box;
+}
+
+/* Mitad derecha fija (fondo de la página derecha) */
+.book-right {
+    position: absolute;
+    right: 0; top: 0;
+    width: 50%; height: 100%;
+    background: #FFF0F0;
+    border-radius: 0 8px 8px 0;
+    border: 1px solid #e0b0b0;
+    border-left: none;
+    box-shadow:
+        inset 10px 0 30px rgba(101,1,14,0.07),
+        6px 0 20px rgba(0,0,0,0.3);
+    overflow: hidden;
+    background-image: repeating-linear-gradient(
+        transparent, transparent 29px, rgba(101,1,14,0.1) 30px
+    );
+    background-size: 100% 30px;
+    background-position: 0 40px;
+    z-index: 1;
+}
+
+.book-right-content {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    box-sizing: border-box;
+}
+
+/* Lomo central */
+.book-spine {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 100%;
+    background: linear-gradient(180deg,
+        #4a0008 0%, #1a0003 25%,
+        #65010E 50%, #1a0003 75%, #4a0008 100%
+    );
+    z-index: 900;
+    box-shadow: -4px 0 12px rgba(0,0,0,0.5), 4px 0 12px rgba(0,0,0,0.5);
+    border-radius: 2px;
+}
+
+/* ── Las hojas que giran ── */
+.leaf {
+    position: absolute;
+    top: 0;
+    left: 50%;               
+    width: 50%;              
+    height: 100%;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    /* Aparecen suavemente y giran fluido */
+    transition: transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1.000), opacity 0.6s ease 0.1s;
+}
+
+.leaf.flipped {
+    transform: rotateY(-180deg);
+}
+
+/* Cara delantera: visible en la mitad derecha antes de girar */
+.leaf-front {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+    border-radius: 0 8px 8px 0;
+    border: 1px solid #e0b0b0;
+    border-left: none;
+}
+
+/* Cara trasera: visible en la mitad izquierda después de girar */
+.leaf-back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: rotateY(180deg);
+    overflow: hidden;
+    border-radius: 8px 0 0 8px;
+    border: 1px solid #e0b0b0;
+    border-right: none;
+}
+
+/* ── Portada ── */
+.cover-face {
+    background:
+        radial-gradient(ellipse at 35% 35%, #5a000c 0%, #1a0003 65%),
+        linear-gradient(135deg, #3D0109, #140103);
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    box-sizing: border-box;
+    padding: 30px;
+}
+
+.cover-face::before {
+    content: '';
+    position: absolute;
+    inset: 14px;
+    border: 1px solid rgba(255,194,194,0.18);
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.cover-title {
+    font-family: 'Alex Brush', cursive;
+    font-size: 48px;
+    color: #fff;
+    text-align: center;
+    line-height: 1.25;
+    text-shadow: 0 0 6px #ff3366, 0 0 20px #ff0033, 0 0 45px #cc0000;
+}
+
+.cover-sub {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    color: #ffc2c2;
+    letter-spacing: 3px;
+    text-align: center;
+}
+
+.cover-line {
+    width: 55%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,194,194,0.4), transparent);
+}
+
+.cover-deco {
+    font-size: 32px;
+    opacity: 0.8;
+}
+
+/* ── Papel de páginas interiores ── */
+.paper-face {
+    background: #FFF0F0;
+    background-image: repeating-linear-gradient(
+        transparent, transparent 29px, rgba(101,1,14,0.1) 30px
+    );
+    background-size: 100% 30px;
+    background-position: 0 40px;
+    width: 100%; height: 100%;
+    box-sizing: border-box;
+}
+
+/* Cara derecha (front): contenido de página derecha */
+.paper-face.right {
+    display: flex;
+    flex-direction: column;
+    padding: 35px 28px 20px 22px;
+    gap: 10px;
+}
+
+/* Cara izquierda (back): polaroid centrado */
+.paper-face.left {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 25px 18px;
+}
+
+/* ── Polaroid ── */
+.polaroid {
+    background: #fff;
+    padding: 10px 10px 34px;
+    box-shadow: 4px 4px 0 #ddd, 8px 8px 0 #ccc, 0 18px 35px rgba(0,0,0,0.22);
+    transform: rotate(-2.5deg);
+    display: inline-block;
+}
+
+.polaroid img {
+    width: 180px;
+    height: 155px;
+    object-fit: cover;
+    display: block;
+    border: 1px solid #eee;
+}
+
+.polaroid-caption {
+    font-family: 'Alex Brush', cursive;
+    font-size: 20px;
+    color: #555;
+    text-align: center;
+    margin-top: 6px;
+    line-height: 1.3;
+}
+
+/* ── Texto de página ── */
+.page-date {
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    color: #65010E;
+    letter-spacing: 2px;
+    border-bottom: 1px solid rgba(101,1,14,0.18);
+    padding-bottom: 6px;
+    flex-shrink: 0;
+}
+
+.page-msg {
+    font-family: 'Alex Brush', cursive;
+    font-size: 26px;
+    color: #3a1218;
+    line-height: 1.7;
+    flex: 1;
+}
+
+.page-num {
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    color: rgba(101,1,14,0.3);
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* ── Página izquierda inicial (contraportada / portada interior) ── */
+.left-cover-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+}
+
+.left-cover-text {
+    font-family: 'Alex Brush', cursive;
+    font-size: 28px;
+    color: rgba(101,1,14,0.25);
+    text-align: center;
+    line-height: 1.6;
+}
+
+/* ── Controles ── */
+.book-controls {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin-top: 34px;
+}
+
+.flip-btn {
+    background: #280106;
+    color: #fff;
+    border: 2px solid #ffc2c2;
+    border-radius: 40px;
+    padding: 12px 34px;
+    font-family: 'VT323', monospace;
+    font-size: 24px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+.flip-btn:hover:not(:disabled) {
+    background: #65010E;
+    box-shadow: 0 0 22px rgba(255,0,51,0.45);
+    transform: translateY(-2px);
+}
+
+.flip-btn:disabled {
+    opacity: 0.28;
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+}
+
+.page-indicator {
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    color: #a38c8f;
+    letter-spacing: 2px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.kb-hint {
+    margin-top: 14px;
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    color: rgba(163,140,143,0.4);
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .book { width: 96vw; height: calc(96vw * 0.63); }
+    .polaroid img { width: 120px; height: 105px; }
+    .cover-title { font-size: 32px; }
+    .page-msg { font-size: 20px; }
+    .flip-btn { padding: 10px 22px; font-size: 20px; }
+}
+
+@media (max-width: 540px) {
+    .book { height: calc(96vw * 0.75); }
+    .cover-title { font-size: 24px; }
+    .page-msg { font-size: 16px; }
+    .page-date { font-size: 16px; }
+    .paper-face.right { padding: 22px 14px 14px 16px; }
+}
+    </style>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="header-banner-container">
+        <img src="FOTOS/Portada 1.png" class="banner-img" alt="Portada Michelle">
+        <div class="header-text-overlay">
+            <p class="welcome-text">✦ Bienvenidxs ✦</p>
+            <h1 class="sparkle-name">Michelle</h1>
+            <p class="tagline">✦ MI PEQUEÑO ESPACIO EN LA WEB ✦</p>
+        </div>
+        <nav class="nav-buttons">
+            <a href="index.html">INDEX</a>
+            <a href="gustos.html">MIS GUSTOS</a>
+            <a href="galeria.html">GALERÍA</a>
+            <a href="diario.html">DIARIO</a>
+        </nav>
+    </div>
+</header>
+
+<div class="marquee-container">
+    <div class="marquee-track">
+        <video src="FOTOS/GIF/1.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/2.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/3.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/4.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/5.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/6.mp4.mp4" autoplay loop muted playsinline></video>
+
+        <video src="FOTOS/GIF/1.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/2.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/3.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/4.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/5.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/6.mp4.mp4" autoplay loop muted playsinline></video>
+
+        <video src="FOTOS/GIF/1.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/2.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/3.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/4.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/5.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/6.mp4.mp4" autoplay loop muted playsinline></video>
+
+        <video src="FOTOS/GIF/1.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/2.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/3.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/4.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/5.mp4.mp4" autoplay loop muted playsinline></video>
+        <video src="FOTOS/GIF/6.mp4.mp4" autoplay loop muted playsinline></video>
+    </div>
+</div>
+
+<section class="diary-scene">
+
+    <div class="diary-title-wrap">
+        <h2 class="diary-main-title">Diario de mi Wawita Tikitita</h2>
+        <p class="diary-tagline"> NUESTRAS MEMORIAS EN PAPEL </p>
+    </div>
+
+    <div class="book-scene">
+        <div class="book closed" id="book"> <div class="book-left">
+                <div class="book-left-content" id="leftContent"></div>
+            </div>
+
+            <div class="book-right">
+                <div class="book-right-content" id="rightContent"></div>
+            </div>
+
+            <div class="book-spine"></div>
+
+            <div class="leaf" id="leaf-0">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">21 de Marzo, 2026</div>
+                        <p class="page-msg">
+                            Hoy te pedí que fueras mi novia, y dijiste que sí. Ese nerviosismo que sentí al preguntarte se transformó en la alegría más grande cuando escuché tu respuesta, a pesar que ya sabía que dirias. Desde ese momento, supe que cada día debía amarte más que el anterior. Y aquí estamos, escribiendo el primer capítulo de nuestra historia juntas.
+                        </p>
+                        <div class="page-num">pág. 1</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/diario/playa.jfif" alt="Formalización">
+                        div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="leaf" id="leaf-1">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">Un día de verano</div>
+                        <p class="page-msg">
+                            La playa siempre fue tu lugar favorito, aprecio con todo mi corazón que me hayas dejado compartir ese espacio tan especial contigo, recorrer la arena de tu mano, sentir la brisa del mar juntas en aquella roca enorme, sabía que estaba destinada a acompañarte en todos los océanos y besarte en cada atardecer a la orilla del mar.
+                        </p>
+                        <div class="page-num">pág. 2</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/diario/ella.jfif" alt="Foto playa">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="leaf" id="leaf-2">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">Ella</div>
+                        <p class="page-msg">
+                            Ella es maravillosa, es la mujer mas increíble que he conocido, es mi mejor amiga, mi compañera, mi amor, mi todo. Me encanta poder observarla y siempre encontrarla más hermosa que nunca. Ella tiene los ojos más lindos, cada vez que pone "esa cara" no puedo evitar morir de amor y replantearme cómo tuve tanta suerte de que me eligiera a mí entre tantas personas. Simplemente a ella la amo.
+                        </p>
+                        <div class="page-num">pág. 3</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/diario/llavero.jfif" alt="Primera noche juntas">
+                        </div>
+                        <div class="polaroid">
+                            <img src="FOTOS/diario/moda.png" alt="Primera noche juntas">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="leaf" id="leaf-3">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">Un día cualquiera</div>
+                        <p class="page-msg">
+                            Los días a tu lado no necesitan ocasión especial para ponernos creativas, ser expontáneas y crear momentos únicos, siempre encontramos la manera de entretenernos y divertirnos, no importa si es un día en casa o una salida, somos nuestro propio plan perfecto.
+                        </p>
+                        <div class="page-num">pág. 4</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/diario/postre.jfif" alt="Besito en el cachete">                  
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="leaf" id="leaf-4">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">Comidita rica</div>
+                        <p class="page-msg">
+                            Gracias por cocinarme cada antojo que se me ocurre, por acompañarme a hacer postresitos, cada bocado va acompañado del toque especial de tu amor (y odio a veces), amo ser consentida y que con cada preparación rica me hagas sentir amada y cuidada. Yo se que me amas porque siempre buscas darme el antojo a pesar de todo.
+                            Mencion honorifica a la lasaña 10/10
+                        </p>
+                        <div class="page-num">pág. 5</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/diario/musica.jfif" alt="Noche de frifrayers">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="leaf" id="leaf-5">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">Me cantas una canción de amor</div>
+                        <p class="page-msg">
+                            Cerrar los ojos, arroparme entre tus brazos y escuchar tu hermos voz catandome todas esas canciones que nos representan, eso es amor verdadero para mi, ese instante entiendo que eres suficiente, porque quiero llorar de la felicidad y lo he hecho, te amo tanto tanto amada mia.
+                            Cántame esa que me gusta, la de mon con caloncho, sabes que me gusta.
+                        </p>
+                        <div class="page-num">pág. 6</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/diario/family.jfif" alt="2do encuentro">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="leaf" id="leaf-6">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">Familia algún día</div>
+                        <p class="page-msg">
+                            En algún punto de nuestras vidas yo se que lograremos formar nuestra propia familia, tener una mini versión tuya merodeando por la casa, con tu sonrisa malevola y personalidad cautivadora. No tienes idea de la ilusión que me hace ya pensar en ese futuro, nuestra casa llena de amor y costumbres nuestras, soy feliz de proyectar este sueño a tu lado, sigamos construyendo esta relación irrompible.
+                        </p>
+                        <div class="page-num">pág. 7</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/diario/manos.jfif" alt="Vamo a meiggs">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="leaf" id="leaf-7">
+                <div class="leaf-front">
+                    <div class="paper-face right">
+                        <div class="page-date">Sabías que...</div>
+                        <p class="page-msg">
+                            Te admiro mi amor, eres una mujer fuerte, a pesar que tu corazón sea sencible, siempre logras mantener la compostura y buscar todos los recursos para salir adelante, de verdad cuando digo que eres increible, lo digo con justa razón, me enorgullese tenerte como novia y presumirle al mundo entero que eres solamente mía, si te fallo a veces perdóname, no es mi intención, solo quiero que sepas que te amo con toda mi alma.
+                        </p>
+                        <div class="page-num">pág. 8</div>
+                    </div>
+                </div>
+                <div class="leaf-back">
+                    <div class="paper-face left">
+                        <div class="polaroid">
+                            <img src="FOTOS/US/21.jfif" alt="Divas">
+                            <div class="polaroid-caption">Divas 👑</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div></div><div class="book-controls">
+        <button class="flip-btn" id="prevBtn" disabled>◀ ANTERIOR</button>
+        <span class="page-indicator" id="indicator">Portada</span>
+        <button class="flip-btn" id="nextBtn">SIGUIENTE ▶</button>
+    </div>
+   
+
+</section>
+
+<script>
+/* ============================================================
+   FLIPBOOK ENGINE — lógica reajustada
+   -1 = Portada (Libro cerrado)
+    0 = Abierto en Página 1
+   ...
+    N = Contraportada (Libro cerrado al final)
+============================================================ */
+
+const leaves    = Array.from(document.querySelectorAll('.leaf'));
+const prevBtn   = document.getElementById('prevBtn');
+const nextBtn   = document.getElementById('nextBtn');
+const indicator = document.getElementById('indicator');
+const N         = leaves.length;
+
+let current = -1;  
+
+const LEFT_COVER_HTML = `
+    <div class="left-cover-content">
+        <div class="left-cover-text">
+            Este diario<br>le pertenece al<br>amor de mi vida.
+        </div>
+    </div>`;
+
+const RIGHT_COVER_HTML = `
+    <div class="cover-face">
+        <div class="cover-deco">♡</div>
+        <div class="cover-line"></div>
+        <div class="cover-title">Diario de<br>amor</div>
+        <div class="cover-line"></div>
+        <div class="cover-sub">M &amp; A · 2026 — ∞</div>
+    </div>`;
+
+const RIGHT_END_HTML = `
+    <div style="display:flex;align-items:center;justify-content:center;height:100%;padding:30px;box-sizing:border-box;">
+        <div style="font-family:'Alex Brush',cursive;font-size:32px;color:rgba(101,1,14,0.22);text-align:center;line-height:1.7;">
+            Fin de este capítulo.<br>El siguiente está<br>por escribirse...
+        </div>
+    </div>`;
+
+function updateZ() {
+    leaves.forEach((leaf, i) => {
+        // En lugar de <=, usamos < para separar estado Abierto de Hoja Girada
+        if (i < current) { 
+            leaf.style.zIndex = i + 1;
+            leaf.classList.add('flipped');
+        } else {
+            leaf.style.zIndex = N - i + 10;
+            leaf.classList.remove('flipped');
+        }
+    });
+}
+
+function render() {
+    const leftEl  = document.getElementById('leftContent');
+    const rightEl = document.getElementById('rightContent');
+    const bookEl  = document.getElementById('book');
+
+    if (current === -1) {
+        // Portada
+        bookEl.classList.add('closed');
+        leftEl.innerHTML  = LEFT_COVER_HTML;
+        rightEl.innerHTML = RIGHT_COVER_HTML;
+        indicator.textContent = 'Portada';
+    } else if (current === N) {
+        // Contraportada final
+        bookEl.classList.add('closed');
+        leftEl.innerHTML  = '';
+        rightEl.innerHTML = RIGHT_END_HTML;
+        indicator.textContent = 'Fin ♡';
+    } else {
+        // Libro abierto (Páginas interiores)
+        bookEl.classList.remove('closed');
+        leftEl.innerHTML  = LEFT_COVER_HTML;
+        rightEl.innerHTML = RIGHT_END_HTML;
+        // Muestra el número de la página derecha actual
+        indicator.textContent = `Pág. ${current + 1}`; 
+    }
+
+    prevBtn.disabled = (current === -1);
+    nextBtn.disabled = (current === N);
+}
+
+function flipNext() {
+    if (current >= N) return;
+    
+    // Si estamos dentro del libro, aplicamos zIndex especial a la hoja que gira
+    if (current >= 0 && current < N) {
+        leaves[current].style.zIndex = N + 100;
+        void leaves[current].offsetWidth; 
+    }
+
+    current++;
+    updateZ();
+    render();
+}
+
+function flipPrev() {
+    if (current <= -1) return;
+    
+    // Si vamos a retroceder una hoja que ya estaba girada
+    if (current > 0 && current <= N) {
+        leaves[current - 1].style.zIndex = N + 100;
+        void leaves[current - 1].offsetWidth;
+    }
+
+    current--;
+    updateZ();
+    render();
+}
+
+nextBtn.addEventListener('click', flipNext);
+prevBtn.addEventListener('click', flipPrev);
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') flipNext();
+    if (e.key === 'ArrowLeft')  flipPrev();
+});
+
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) {
+        if (dx < 0) flipNext();
+        else        flipPrev();
+    }
+});
+
+/* Inicializar */
+updateZ();
+render();
+</script>
+
+<script src="script.js"></script>
+</body>
+</html>
